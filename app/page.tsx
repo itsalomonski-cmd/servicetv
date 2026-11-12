@@ -127,9 +127,8 @@ export default function Home() {
           </h1>
 
           <p className="text-base sm:text-lg md:text-xl text-[#341766]/85 max-w-3xl mx-auto mb-10 font-medium leading-relaxed px-2">
-            Looking for a reliable IPTV Service in the USA? IPTV Service delivers a full lineup of live channels and a growing on-demand library in crisp 4K on any device. Your IPTV Subscription activates in minutes, backed by dedicated high-performance edge servers for buffer-free, no-contract streaming. From NFL, NBA, MLB, and NHL to ESPN, Fox, NBC, CBS, HBO, and PPV events — IPTV Service keeps you watching smoothly. Get started today.
+            Enjoy NFL, NBA, MLB, NHL, major sporting events, premium TV channels, the latest movies, and much more with our reliable IPTV Service. Get your IPTV Subscription today and enjoy smooth 4K streaming anytime, anywhere!
           </p>
-
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center w-full max-w-md sm:max-w-xl mx-auto px-4">
             <Link
               href="/pricing"
