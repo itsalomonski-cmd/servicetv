@@ -110,7 +110,7 @@ export default function Home() {
             sizes="100vw"
             quality={85}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-white/65 via-white/75 to-white/75" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/75 to-white/95" />
         </div>
 
         <FadeIn className="relative z-10 max-w-5xl mx-auto flex flex-col items-center justify-center my-auto w-full">
@@ -126,7 +126,7 @@ export default function Home() {
             <span className="block text-[#6934B8] md:whitespace-nowrap">PREMIUM IPTV Provider</span>
           </h1>
 
-          <p className="text-base sm:text-lg md:text-xl text-[#341766]/80 max-w-3xl mx-auto mb-10 font-medium leading-relaxed px-2">
+          <p className="text-base sm:text-lg md:text-xl text-[#341766]/85 max-w-3xl mx-auto mb-10 font-medium leading-relaxed px-2">
             Looking for a reliable IPTV Service in the USA? IPTV Service delivers a full lineup of live channels and a growing on-demand library in crisp 4K on any device. Your IPTV Subscription activates in minutes, backed by dedicated high-performance edge servers for buffer-free, no-contract streaming. From NFL, NBA, MLB, and NHL to ESPN, Fox, NBC, CBS, HBO, and PPV events — IPTV Service keeps you watching smoothly. Get started today.
           </p>
 
