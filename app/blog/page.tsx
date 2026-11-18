@@ -47,80 +47,107 @@ const PAGE_DESCRIPTION = clampDescription(
 );
 
 // ---------------------------------------------------------------------------
-// METADATA
+// METADATA (dynamic per page — Next.js 15 async searchParams)
 // ---------------------------------------------------------------------------
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: {
-    default: PAGE_TITLE,
-    absolute: PAGE_TITLE,
-  },
-  description: PAGE_DESCRIPTION,
-  authors: [{ name: `${BRAND} Team` }],
-  creator: BRAND,
-  publisher: BRAND,
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const rawPage = Number.parseInt(params?.page ?? '1', 10);
+  const page = Number.isFinite(rawPage) && rawPage > 1 ? rawPage : 1;
+
+  const title =
+    page > 1
+      ? clampTitle(`${BRAND} Blog | Page ${page} | Guides & Tips 2026`)
+      : PAGE_TITLE;
+
+  const description =
+    page > 1
+      ? clampDescription(
+          `Page ${page} of the ${BRAND} blog — setup guides, app reviews, and streaming tips for Firestick, Smart TV and mobile.`
+        )
+      : PAGE_DESCRIPTION;
+
+  const canonical = page > 1 ? `${PAGE_URL}?page=${page}` : PAGE_URL;
+
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: {
+      default: title,
+      absolute: title,
     },
-  },
-  alternates: {
-    canonical: PAGE_URL,
-    languages: {
-      'en-US': PAGE_URL,
+    description,
+    authors: [{ name: `${BRAND} Team` }],
+    creator: BRAND,
+    publisher: BRAND,
+    formatDetection: {
+      email: false,
+      address: false,
+      telephone: false,
     },
-  },
-  openGraph: {
-    title: PAGE_TITLE,
-    description: PAGE_DESCRIPTION,
-    url: PAGE_URL,
-    siteName: BRAND,
-    locale: CONSTANTS.LOCALE,
-    type: 'website',
-    images: [
-      {
-        url: `${SITE_URL}/img/structer.webp`,
-        width: 1200,
-        height: 630,
-        alt: `${BRAND} Blog - Setup Guides and Streaming Tips`,
+    robots:
+      page > 1
+        ? { index: false, follow: true }
+        : {
+            index: true,
+            follow: true,
+            googleBot: {
+              index: true,
+              follow: true,
+              'max-video-preview': -1,
+              'max-image-preview': 'large',
+              'max-snippet': -1,
+            },
+          },
+    alternates: {
+      canonical,
+      languages: {
+        'en-US': canonical,
       },
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      siteName: BRAND,
+      locale: CONSTANTS.LOCALE,
+      type: 'website',
+      images: [
+        {
+          url: `${SITE_URL}/img/structer.webp`,
+          width: 1200,
+          height: 630,
+          alt: `${BRAND} Blog - Setup Guides and Streaming Tips`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`${SITE_URL}/img/structer.webp`],
+    },
+    category: 'entertainment',
+    keywords: [
+      `${FOCUS_KEYWORD} blog`,
+      `${FOCUS_KEYWORD} guide`,
+      `${FOCUS_KEYWORD} tips`,
+      'best iptv provider',
+      'iptv provider blog',
+      'iptv setup guide',
+      'iptv firestick setup',
+      'iptv smarters pro guide',
+      'iptv reviews',
+      'iptv subscription',
+      '4k iptv',
+      'iptv smart tv guide',
+      'streaming tips',
+      'iptv news 2026',
     ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: PAGE_TITLE,
-    description: PAGE_DESCRIPTION,
-    images: [`${SITE_URL}/img/structer.webp`],
-  },
-  category: 'entertainment',
-  keywords: [
-    `${FOCUS_KEYWORD} blog`,
-    `${FOCUS_KEYWORD} guide`,
-    `${FOCUS_KEYWORD} tips`,
-    'best iptv provider',
-    'iptv provider blog',
-    'iptv setup guide',
-    'iptv firestick setup',
-    'iptv smarters pro guide',
-    'iptv reviews',
-    'iptv subscription',
-    '4k iptv',
-    'iptv smart tv guide',
-    'streaming tips',
-    'iptv news 2026',
-  ],
-};
+  };
+}
 
 // ---------------------------------------------------------------------------
 // CATEGORY CONFIG
@@ -410,12 +437,26 @@ function FeaturedCard({ post }: { post: any }) {
 }
 
 // ---------------------------------------------------------------------------
-// MAIN PAGE
+// MAIN PAGE — Next.js 15 async searchParams
 // ---------------------------------------------------------------------------
-export default function BlogListing() {
+export default async function BlogListing({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const params = await searchParams;
+
   const postsForGrid = restPosts;
-  const totalPages = Math.ceil(postsForGrid.length / POSTS_PER_PAGE);
-  const currentPosts = postsForGrid.slice(0, POSTS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(postsForGrid.length / POSTS_PER_PAGE));
+
+  // Parse & clamp the current page from the URL
+  const rawPage = Number.parseInt(params?.page ?? '1', 10);
+  const currentPage = Number.isFinite(rawPage)
+    ? Math.min(Math.max(rawPage, 1), totalPages)
+    : 1;
+
+  const startIdx = (currentPage - 1) * POSTS_PER_PAGE;
+  const currentPosts = postsForGrid.slice(startIdx, startIdx + POSTS_PER_PAGE);
 
   const tagCounts: Record<string, number> = {};
   blogPosts.forEach((post) => {
@@ -531,46 +572,78 @@ export default function BlogListing() {
           </div>
 
           {totalPages > 1 && (
-            <div className="mt-12 flex items-center justify-center gap-2 sm:gap-3">
-              <button
-                type="button"
-                disabled
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#EDEADE]/5 text-[#EDEADE]/40 border border-white/10 text-xs font-black uppercase tracking-widest cursor-not-allowed"
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Prev
-              </button>
-
-              {Array.from({ length: totalPages }).map((_, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  className={`cursor-pointer w-10 h-10 rounded-full text-xs font-black transition-all ${
-                    idx === 0
-                      ? 'bg-[#FFD532] text-[#341766] shadow-lg shadow-[#FFD532]/30'
-                      : 'bg-[#EDEADE]/5 text-[#EDEADE]/70 border border-white/10 hover:bg-[#6934B8]/20 hover:text-[#EDEADE] hover:border-[#6934B8]/60'
-                  }`}
-                  aria-label={`Go to page ${idx + 1}`}
+            <nav
+              className="mt-12 flex items-center justify-center gap-2 sm:gap-3"
+              aria-label="Blog pagination"
+            >
+              {/* PREV */}
+              {currentPage > 1 ? (
+                <Link
+                  href={currentPage === 2 ? '/blog' : `/blog?page=${currentPage - 1}`}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#6934B8]/20 text-[#FFD532] border border-[#FFD532]/40 text-xs font-black uppercase tracking-widest hover:bg-[#FFD532] hover:text-[#341766] transition-all"
+                  aria-label="Previous page"
+                  rel="prev"
                 >
-                  {idx + 1}
-                </button>
-              ))}
+                  <ChevronLeft className="w-4 h-4" />
+                  Prev
+                </Link>
+              ) : (
+                <span
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#EDEADE]/5 text-[#EDEADE]/40 border border-white/10 text-xs font-black uppercase tracking-widest cursor-not-allowed"
+                  aria-disabled="true"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Prev
+                </span>
+              )}
 
-              <button
-                type="button"
-                disabled={totalPages <= 1}
-                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all ${
-                  totalPages > 1
-                    ? 'bg-[#6934B8]/20 text-[#FFD532] border border-[#FFD532]/40 hover:bg-[#FFD532] hover:text-[#341766] cursor-pointer'
-                    : 'bg-[#EDEADE]/5 text-[#EDEADE]/40 border border-white/10 cursor-not-allowed'
-                }`}
-                aria-label="Next page"
-              >
-                Next
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+              {/* PAGE NUMBERS */}
+              {Array.from({ length: totalPages }).map((_, idx) => {
+                const pageNum = idx + 1;
+                const isActive = pageNum === currentPage;
+                const href = pageNum === 1 ? '/blog' : `/blog?page=${pageNum}`;
+
+                return isActive ? (
+                  <span
+                    key={pageNum}
+                    aria-current="page"
+                    className="w-10 h-10 rounded-full text-xs font-black bg-[#FFD532] text-[#341766] shadow-lg shadow-[#FFD532]/30 flex items-center justify-center"
+                  >
+                    {pageNum}
+                  </span>
+                ) : (
+                  <Link
+                    key={pageNum}
+                    href={href}
+                    className="w-10 h-10 rounded-full text-xs font-black bg-[#EDEADE]/5 text-[#EDEADE]/70 border border-white/10 hover:bg-[#6934B8]/20 hover:text-[#EDEADE] hover:border-[#6934B8]/60 transition-all flex items-center justify-center"
+                    aria-label={`Go to page ${pageNum}`}
+                  >
+                    {pageNum}
+                  </Link>
+                );
+              })}
+
+              {/* NEXT */}
+              {currentPage < totalPages ? (
+                <Link
+                  href={`/blog?page=${currentPage + 1}`}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#6934B8]/20 text-[#FFD532] border border-[#FFD532]/40 text-xs font-black uppercase tracking-widest hover:bg-[#FFD532] hover:text-[#341766] transition-all"
+                  aria-label="Next page"
+                  rel="next"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              ) : (
+                <span
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#EDEADE]/5 text-[#EDEADE]/40 border border-white/10 text-xs font-black uppercase tracking-widest cursor-not-allowed"
+                  aria-disabled="true"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </span>
+              )}
+            </nav>
           )}
         </section>
 
